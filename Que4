@@ -1,0 +1,63 @@
+from google.colab import drive
+drive.mount('/content/drive')
+
+!git clone https://github.com/thewmigunaweera71-svg/Image_Processing_Assignment_01.git
+
+%cd Image_Processing_Assignment_01/
+
+
+
+import cv2
+import numpy as np
+import os
+import matplotlib.pyplot as plt
+
+# Create output folder
+os.makedirs("outputs/part4", exist_ok=True)
+
+# Load image
+img = cv2.imread("/content/drive/MyDrive/Image_Processing_Assignment_01/looking_out.jpg")
+
+# Convert to grayscale
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+# -------- Otsu Thresholding --------
+# Otsu automatically finds the best threshold
+thresh_value, binary = cv2.threshold(
+    gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU
+)
+
+# Save binary mask
+cv2.imwrite("outputs/part4/otsu_mask.png", binary)
+
+print(f"Otsu Threshold Value: {thresh_value}")
+
+# -------- Foreground Mask --------
+# Foreground = white region
+mask = binary == 255
+
+# -------- Histogram Equalization on Foreground --------
+foreground = gray.copy()
+
+# Manual histogram equalization function
+def histogram_equalization(image):
+    hist, bins = np.histogram(image.flatten(), 256, [0,256])
+    cdf = hist.cumsum()
+    cdf_normalized = cdf / cdf[-1]
+    equalized = np.interp(image.flatten(), bins[:-1], cdf_normalized * 255)
+    return equalized.reshape(image.shape).astype(np.uint8)
+
+# Apply only on foreground pixels
+eq_gray = gray.copy()
+eq_gray[mask] = histogram_equalization(gray[mask])
+
+# Save results
+cv2.imwrite("outputs/part4/grayscale.png", gray)
+cv2.imwrite("outputs/part4/foreground_equalized.png", eq_gray)
+
+print("Part 4 completed successfully")
+from google.colab.patches import cv2_imshow
+
+cv2_imshow(gray)
+cv2_imshow(binary)
+cv2_imshow(eq_gray)
