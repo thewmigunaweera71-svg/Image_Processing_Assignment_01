@@ -1,0 +1,65 @@
+from google.colab import drive
+drive.mount('/content/drive')
+
+!git clone https://github.com/thewmigunaweera71-svg/Image_Processing_Assignment_01.git
+
+%cd Image_Processing_Assignment_01/
+
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Load image (OpenCV loads as BGR)
+# Changed path to load from the cloned repository
+img_bgr = cv2.imread("highlights_and_shadows.jpg")
+
+# Check if image was loaded successfully
+if img_bgr is None:
+    print("Error: Could not load image. Please check the path and if the file exists.")
+else:
+    img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+
+    plt.figure(figsize=(5,5))
+    plt.imshow(img_rgb)
+    plt.title("Original Image")
+    plt.axis("off")
+    plt.show()
+
+    img_lab = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2LAB)
+
+    # Split channels
+    L, a, b = cv2.split(img_lab)
+
+    gamma = 0.6   # example value (you can justify this)
+
+    # Normalize L channel to [0,1]
+    L_norm = L.astype(np.float32) / 255.0
+
+    # Apply gamma correction
+    L_gamma = np.power(L_norm, gamma)
+
+    # Rescale back to [0,255]
+    L_corrected = np.uint8(L_gamma * 255)
+
+    lab_corrected = cv2.merge((L_corrected, a, b))
+    img_corrected = cv2.cvtColor(lab_corrected, cv2.COLOR_LAB2RGB)
+
+    plt.figure(figsize=(5,5))
+    plt.imshow(img_corrected)
+    plt.title(f"Gamma Corrected Image (γ = {gamma})")
+    plt.axis("off")
+    plt.show()
+
+    plt.figure(figsize=(6,4))
+    plt.hist(L.flatten(), bins=256, range=(0,255))
+    plt.title("Histogram of Original L Channel")
+    plt.xlabel("Intensity")
+    plt.ylabel("Frequency")
+    plt.show()
+
+    plt.figure(figsize=(6,4))
+    plt.hist(L_corrected.flatten(), bins=256, range=(0,255))
+    plt.title("Histogram of Gamma Corrected L Channel")
+    plt.xlabel("Intensity")
+    plt.ylabel("Frequency")
+    plt.show()
