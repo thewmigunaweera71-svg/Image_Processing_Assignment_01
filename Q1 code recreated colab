@@ -1,0 +1,51 @@
+from google.colab import drive
+drive.mount('/content/gdrive')
+
+!git clone https://github.com/thewmigunaweera71-svg/Image_Processing_Assignment_01.git
+
+%cd Image_Processing_Assignment_01
+
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Read image (grayscale)
+img = cv2.imread("/content/gdrive/MyDrive/Image_Processing_Assignment_01/runway.jpg", cv2.IMREAD_GRAYSCALE)
+img_norm = img / 255.0  # normalize to [0,1]
+
+# -------- Gamma Correction --------
+def gamma_correction(image, gamma):
+    return np.power(image, gamma)
+
+gamma_05 = gamma_correction(img_norm, 0.5)
+gamma_2 = gamma_correction(img_norm, 2.0)
+
+# -------- Contrast Stretching --------
+def contrast_stretch(image, r1=0.2, r2=0.8):
+    stretched = np.zeros_like(image)
+    for i in range(image.shape[0]):
+        for j in range(image.shape[1]):
+            r = image[i, j]
+            if r < r1:
+                stretched[i, j] = 0
+            elif r <= r2:
+                stretched[i, j] = (r - r1) / (r2 - r1)
+            else:
+                stretched[i, j] = 1
+    return stretched
+
+contrast_img = contrast_stretch(img_norm)
+
+# -------- Display Results --------
+titles = ['Original', 'Gamma γ=0.5', 'Gamma γ=2', 'Contrast Stretching']
+images = [img_norm, gamma_05, gamma_2, contrast_img]
+
+plt.figure(figsize=(10, 8))
+for i in range(4):
+    plt.subplot(2, 2, i+1)
+    plt.imshow(images[i], cmap='gray')
+    plt.title(titles[i])
+    plt.axis('off')
+
+plt.tight_layout()
+plt.show()
