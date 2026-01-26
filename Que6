@@ -1,0 +1,73 @@
+from google.colab import drive
+drive.mount('/content/drive')
+
+!git clone https://github.com/thewmigunaweera71-svg/Image_Processing_Assignment_01.git
+
+%cd Image_Processing_Assignment_01/
+
+
+import cv2
+import numpy as np
+import os
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+# Create output folder
+os.makedirs("outputs/part6", exist_ok=True)
+
+# Load grayscale image
+img = cv2.imread("/content/drive/MyDrive/Image_Processing_Assignment_01/runway.jpg", cv2.IMREAD_GRAYSCALE)
+
+# -------- Gaussian Function --------
+def gaussian(x, y, sigma):
+    return (1 / (2 * np.pi * sigma**2)) * np.exp(-(x**2 + y**2) / (2 * sigma**2))
+
+# -------- (b) 5x5 Derivative of Gaussian Kernels --------
+def dog_kernels(size, sigma):
+    k = size // 2
+    x, y = np.mgrid[-k:k+1, -k:k+1]
+
+    G = gaussian(x, y, sigma)
+    Gx = -x / (sigma**2) * G
+    Gy = -y / (sigma**2) * G
+
+    # Normalize for stability
+    Gx = Gx / np.sum(np.abs(Gx))
+    Gy = Gy / np.sum(np.abs(Gy))
+
+    return Gx, Gy
+
+Gx_5, Gy_5 = dog_kernels(5, 2)
+
+# -------- (c) 51x51 DoG 3D Plot --------
+Gx_51, _ = dog_kernels(51, 2)
+
+X, Y = np.meshgrid(np.arange(51), np.arange(51))
+
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.plot_surface(X, Y, Gx_51)
+ax.set_title("51x51 Derivative of Gaussian (x-direction)")
+plt.savefig("outputs/part6/dog_3d.png")
+plt.close()
+
+# -------- (d) Apply DoG Kernels --------
+grad_x = cv2.filter2D(img, cv2.CV_64F, Gx_5)
+grad_y = cv2.filter2D(img, cv2.CV_64F, Gy_5)
+
+cv2.imwrite("outputs/part6/grad_x_manual.png", np.abs(grad_x))
+cv2.imwrite("outputs/part6/grad_y_manual.png", np.abs(grad_y))
+
+# -------- (e) Sobel Operator --------
+sobel_x = cv2.Sobel(img, cv2.CV_64F, 1, 0, ksize=5)
+sobel_y = cv2.Sobel(img, cv2.CV_64F, 0, 1, ksize=5)
+
+cv2.imwrite("outputs/part6/grad_x_sobel.png", np.abs(sobel_x))
+cv2.imwrite("outputs/part6/grad_y_sobel.png", np.abs(sobel_y))
+
+print("Part 6 completed successfully")
+from google.colab.patches import cv2_imshow
+
+cv2_imshow(np.uint8(np.abs(grad_x)))
+cv2_imshow(np.uint8(np.abs(sobel_x)))
+
