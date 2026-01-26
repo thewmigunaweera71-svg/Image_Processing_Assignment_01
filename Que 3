@@ -1,0 +1,61 @@
+from google.colab import drive
+drive.mount('/content/drive')
+
+!git clone https://github.com/thewmigunaweera71-svg/Image_Processing_Assignment_01.git
+
+%cd Image_Processing_Assignment_01/
+
+
+import cv2
+import numpy as np
+import os
+import matplotlib.pyplot as plt
+
+# Create output folder
+os.makedirs("outputs/part3", exist_ok=True)
+
+# Correct image path (VERY IMPORTANT)
+img_path = "/content/drive/MyDrive/Image_Processing_Assignment_01/runway.jpg"   # or runway.png depending on your repo
+
+# Read image as grayscale
+img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
+
+# Check if image loaded
+if img is None:
+    raise FileNotFoundError(f"Image not found at {img_path}")
+
+# -------- Manual Histogram Equalization --------
+def histogram_equalization(image):
+    hist, bins = np.histogram(image.flatten(), 256, [0,256])
+    cdf = hist.cumsum()
+    cdf_normalized = cdf / cdf[-1]
+    equalized = np.interp(image.flatten(), bins[:-1], cdf_normalized * 255)
+    return equalized.reshape(image.shape).astype(np.uint8)
+
+# Apply histogram equalization
+img_eq = histogram_equalization(img)
+
+# Save equalized image
+cv2.imwrite("outputs/part3/runway_equalized.png", img_eq)
+
+# -------- Plot histograms --------
+plt.figure()
+plt.hist(img.flatten(), bins=256)
+plt.title("Original Histogram")
+plt.savefig("outputs/part3/hist_original.png")
+plt.close()
+
+plt.figure()
+plt.hist(img_eq.flatten(), bins=256)
+plt.title("Equalized Histogram")
+plt.savefig("outputs/part3/hist_equalized.png")
+plt.close()
+
+print("Part 3 completed successfully")
+from google.colab.patches import cv2_imshow
+
+print("Original Image:")
+cv2_imshow(img)
+
+print("Equalized Image:")
+cv2_imshow(img_eq)
