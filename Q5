@@ -1,0 +1,62 @@
+from google.colab import drive
+drive.mount('/content/drive')
+
+!git clone https://github.com/thewmigunaweera71-svg/Image_Processing_Assignment_01.git
+
+%cd Image_Processing_Assignment_01/
+
+
+
+import cv2
+import numpy as np
+import os
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+# Create output folder
+os.makedirs("outputs/part5", exist_ok=True)
+
+# Load grayscale image
+img = cv2.imread("/content/drive/MyDrive/Image_Processing_Assignment_01/runway.jpg", cv2.IMREAD_GRAYSCALE)
+
+# -------- (a) 5x5 Gaussian Kernel --------
+def gaussian_kernel(size, sigma):
+    k = size // 2
+    x, y = np.mgrid[-k:k+1, -k:k+1]
+    kernel = np.exp(-(x**2 + y**2) / (2 * sigma**2))
+    kernel = kernel / kernel.sum()
+    return kernel
+
+kernel_5 = gaussian_kernel(5, 2)
+
+print("5x5 Gaussian Kernel (σ=2):")
+print(kernel_5)
+
+# -------- (b) 51x51 Gaussian Kernel 3D Plot --------
+kernel_51 = gaussian_kernel(51, 2)
+
+X, Y = np.meshgrid(np.arange(51), np.arange(51))
+
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.plot_surface(X, Y, kernel_51)
+ax.set_title("51x51 Gaussian Kernel (σ=2)")
+plt.savefig("outputs/part5/gaussian_3d.png")
+plt.close()
+
+# -------- (c) Manual Gaussian Filtering --------
+smoothed_manual = cv2.filter2D(img, -1, kernel_5)
+cv2.imwrite("outputs/part5/smoothed_manual.png", smoothed_manual)
+
+# -------- (d) OpenCV Gaussian Blur --------
+smoothed_opencv = cv2.GaussianBlur(img, (5,5), 2)
+cv2.imwrite("outputs/part5/smoothed_opencv.png", smoothed_opencv)
+
+print("Part 5 completed successfully")
+from google.colab.patches import cv2_imshow
+
+print("Manual Gaussian Smoothing:")
+cv2_imshow(smoothed_manual)
+
+print("OpenCV Gaussian Blur:")
+cv2_imshow(smoothed_opencv)
