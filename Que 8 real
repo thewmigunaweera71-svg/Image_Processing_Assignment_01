@@ -1,0 +1,45 @@
+from google.colab import drive
+drive.mount('/content/drive')
+
+!git clone https://github.com/thewmigunaweera71-svg/Image_Processing_Assignment_01.git
+
+%cd Image_Processing_Assignment_01/
+
+
+
+
+
+
+import cv2
+import numpy as np
+import os
+
+# Create output folder
+os.makedirs("outputs/part8", exist_ok=True)
+
+# Load noisy image (grayscale)
+img = cv2.imread("/content/drive/MyDrive/Image_Processing_Assignment_01/emma_salt_pepper.jpg", cv2.IMREAD_GRAYSCALE)
+
+# Check if image loaded
+if img is None:
+    raise FileNotFoundError("Noisy image not found in images/ folder")
+
+# -------- (a) Gaussian Smoothing --------
+gaussian = cv2.GaussianBlur(img, (5,5), 1)
+cv2.imwrite("outputs/part8/gaussian_filtered.png", gaussian)
+
+# -------- (b) Median Filtering --------
+median = cv2.medianBlur(img, 5)
+cv2.imwrite("outputs/part8/median_filtered.png", median)
+
+print("Part 8 completed successfully")
+from google.colab.patches import cv2_imshow
+
+print("Original Noisy Image")
+cv2_imshow(img)
+
+print("Gaussian Filtered Image")
+cv2_imshow(gaussian)
+
+print("Median Filtered Image")
+cv2_imshow(median)
