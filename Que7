@@ -1,0 +1,91 @@
+from google.colab import drive
+drive.mount('/content/drive')
+
+!git clone https://github.com/thewmigunaweera71-svg/Image_Processing_Assignment_01.git
+
+%cd Image_Processing_Assignment_01/
+
+
+import cv2
+import numpy as np
+import os
+
+# Create output folder
+os.makedirs("outputs/part7", exist_ok=True)
+
+# Load images (grayscale)
+large = cv2.imread("/content/drive/MyDrive/a1q5images/im01.png", cv2.IMREAD_GRAYSCALE)
+small = cv2.imread("/content/drive/MyDrive/a1q5images/im01small.png", cv2.IMREAD_GRAYSCALE)
+
+# -------- Nearest Neighbor Zoom --------
+def zoom_nearest(image, scale):
+    h, w = image.shape
+    new_h, new_w = int(h * scale), int(w * scale)
+    zoomed = np.zeros((new_h, new_w), dtype=np.uint8)
+
+    for i in range(new_h):
+        for j in range(new_w):
+            zoomed[i, j] = image[int(i / scale), int(j / scale)]
+
+    return zoomed
+
+# -------- Bilinear Zoom --------
+def zoom_bilinear(image, scale):
+    h, w = image.shape
+    new_h, new_w = int(h * scale), int(w * scale)
+    zoomed = np.zeros((new_h, new_w), dtype=np.float32)
+
+    for i in range(new_h):
+        for j in range(new_w):
+            x = i / scale
+            y = j / scale
+
+            x0 = int(np.floor(x))
+            y0 = int(np.floor(y))
+            x1 = min(x0 + 1, h - 1)
+            y1 = min(y0 + 1, w - 1)
+
+            dx = x - x0
+            dy = y - y0
+
+            zoomed[i, j] = (
+                (1 - dx) * (1 - dy) * image[x0, y0] +
+                dx * (1 - dy) * image[x1, y0] +
+                (1 - dx) * dy * image[x0, y1] +
+                dx * dy * image[x1, y1]
+            )
+
+    return zoomed.astype(np.uint8)
+
+# -------- SSD Computation --------
+def normalized_ssd(img1, img2):
+    diff = img1.astype(np.float32) - img2.astype(np.float32)
+    return np.sum(diff ** 2) / (img1.shape[0] * img1.shape[1])
+
+# Compute scale factor
+scale = large.shape[0] / small.shape[0]
+
+# Zoom images
+zoom_nn = zoom_nearest(small, scale)
+zoom_bl = zoom_bilinear(small, scale)
+
+# Save results
+cv2.imwrite("outputs/part7/zoom_nearest.png", zoom_nn)
+cv2.imwrite("outputs/part7/zoom_bilinear.png", zoom_bl)
+
+# Compute SSD
+ssd_nn = normalized_ssd(large, zoom_nn)
+ssd_bl = normalized_ssd(large, zoom_bl)
+
+print("Normalized SSD (Nearest Neighbor):", ssd_nn)
+print("Normalized SSD (Bilinear):", ssd_bl)
+from google.colab.patches import cv2_imshow
+
+print("Original (Large)")
+cv2_imshow(large)
+
+print("Zoomed using Nearest Neighbor")
+cv2_imshow(zoom_nn)
+
+print("Zoomed using Bilinear")
+cv2_imshow(zoom_bl)
