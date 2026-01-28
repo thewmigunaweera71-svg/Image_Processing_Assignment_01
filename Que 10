@@ -1,0 +1,75 @@
+from google.colab import drive
+drive.mount('/content/drive')
+
+!git clone https://github.com/thewmigunaweera71-svg/Image_Processing_Assignment_01.git
+
+%cd Image_Processing_Assignment_01/
+
+
+
+
+
+import cv2
+import numpy as np
+import os
+
+# Create output folder
+os.makedirs("outputs/part10", exist_ok=True)
+
+# Load grayscale image
+img = cv2.imread("/content/drive/MyDrive/Image_Processing_Assignment_01/runway.jpg", cv2.IMREAD_GRAYSCALE)
+
+if img is None:
+    raise FileNotFoundError("Image not found")
+
+# -------- (a) Manual Bilateral Filter --------
+def bilateral_filter_manual(image, diameter, sigma_s, sigma_r):
+    padded = np.pad(image, diameter//2, mode='reflect')
+    filtered = np.zeros_like(image, dtype=np.float32)
+
+    k = diameter // 2
+
+    for i in range(image.shape[0]):
+        for j in range(image.shape[1]):
+            wp_total = 0
+            filtered_pixel = 0
+
+            for x in range(-k, k+1):
+                for y in range(-k, k+1):
+                    spatial = np.exp(-(x**2 + y**2) / (2 * sigma_s**2))
+                    range_ = np.exp(-((image[i, j] - padded[i+x+k, j+y+k])**2) / (2 * sigma_r**2))
+                    weight = spatial * range_
+
+                    filtered_pixel += weight * padded[i+x+k, j+y+k]
+                    wp_total += weight
+
+            filtered[i, j] = filtered_pixel / wp_total
+
+    return np.uint8(filtered)
+
+# -------- (b) Gaussian Smoothing (OpenCV) --------
+gaussian = cv2.GaussianBlur(img, (5,5), 1)
+cv2.imwrite("outputs/part10/gaussian.png", gaussian)
+
+# -------- (c) OpenCV Bilateral Filter --------
+bilateral_cv = cv2.bilateralFilter(img, d=5, sigmaColor=50, sigmaSpace=50)
+cv2.imwrite("outputs/part10/bilateral_opencv.png", bilateral_cv)
+
+# -------- (d) Manual Bilateral Filter --------
+bilateral_manual = bilateral_filter_manual(img, diameter=5, sigma_s=50, sigma_r=50)
+cv2.imwrite("outputs/part10/bilateral_manual.png", bilateral_manual)
+
+print("Part 10 completed successfully")
+from google.colab.patches import cv2_imshow
+
+print("Original Image")
+cv2_imshow(img)
+
+print("Gaussian Smoothed")
+cv2_imshow(gaussian)
+
+print("Bilateral Filter (OpenCV)")
+cv2_imshow(bilateral_cv)
+
+print("Bilateral Filter (Manual)")
+cv2_imshow(bilateral_manual)
