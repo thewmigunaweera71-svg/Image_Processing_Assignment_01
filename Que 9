@@ -1,0 +1,49 @@
+from google.colab import drive
+drive.mount('/content/drive')
+
+!git clone https://github.com/thewmigunaweera71-svg/Image_Processing_Assignment_01.git
+
+%cd Image_Processing_Assignment_01/
+
+
+
+
+import cv2
+import numpy as np
+import os
+
+# Create output folder
+os.makedirs("outputs/part9", exist_ok=True)
+
+# Load grayscale image
+img = cv2.imread("/content/drive/MyDrive/Image_Processing_Assignment_01/runway.jpg", cv2.IMREAD_GRAYSCALE)
+
+if img is None:
+    raise FileNotFoundError("Image not found")
+
+# -------- Method 1: Laplacian Sharpening --------
+laplacian = cv2.Laplacian(img, cv2.CV_64F)
+sharpened_laplacian = img - laplacian
+
+# Convert to uint8
+sharpened_laplacian = np.uint8(np.clip(sharpened_laplacian, 0, 255))
+
+cv2.imwrite("outputs/part9/sharpened_laplacian.png", sharpened_laplacian)
+
+# -------- Method 2: Unsharp Masking --------
+blurred = cv2.GaussianBlur(img, (5,5), 1)
+unsharp = cv2.addWeighted(img, 1.5, blurred, -0.5, 0)
+
+cv2.imwrite("outputs/part9/sharpened_unsharp.png", unsharp)
+
+print("Part 9 completed successfully")
+from google.colab.patches import cv2_imshow
+
+print("Original Image")
+cv2_imshow(img)
+
+print("Laplacian Sharpened Image")
+cv2_imshow(sharpened_laplacian)
+
+print("Unsharp Masked Image")
+cv2_imshow(unsharp)
